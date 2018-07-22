@@ -1,0 +1,19 @@
+{
+  "name": "blockchain_js",
+  "version": "1.0.0",
+  "description": "Blockchain project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --watch dev -e js dev/api.js"
+  },
+  "author": "camillo angelozzi",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "nodemon": "^1.18.3",
+    "sha256": "^0.2.0",
+    "uuid": "^3.3.2"
+  }
+}
