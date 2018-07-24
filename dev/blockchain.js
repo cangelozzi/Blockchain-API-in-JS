@@ -9,9 +9,19 @@
 
 const sha256 = require("sha256");
 
+// ! ----------------------------------------------------------------------------------------
+// ! Now we need to acess the third parameter in the NODE script, so that each node is aware of its url
+const currentNodeUrl = process.argv[3];
+// ! ----------------------------------------------------------------------------------------
+
 function Blockchain() {
   this.chain = []; // blocks will be stored in this array
   this.pendingTransaction = []; // transactions waiting to be mined
+
+
+  this.currentNodeUrl = currentNodeUrl; // node url where the blockchain is running, from [3] in node script 
+  this.networkNodes = [];  // array of nodes network
+
 
   // GENESIS BLOCK
   this.createNewBlock(100, '0', '0');  // GENESIS BLOCK without Proof of Work, with a ARBITRARY PARAMETERS.

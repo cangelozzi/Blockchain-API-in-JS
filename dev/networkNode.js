@@ -7,6 +7,13 @@ const blockchain = require('./blockchain');  // import blockchain contructor fun
 const uuid = require('uuid/v1'); //! Create this NODE identity, in order to get mining reward, with uuid library
 const nodeAddress = uuid().split('-').join(''); // stripping the dashes from this created UNIQUE string id
 
+
+// ! ----------------------------------------------------------------------------------------
+// ! Now we need to create a NETWORK of DECENTRALIZED NODE (API) to hold the blockchain
+const port = process.argv[2]; // create more port for servers, not just the 3000, [2] 3001 is the third element of the start script in Package.json => "start": "nodemon --watch dev -e js dev/api.js 3001"
+// ! ----------------------------------------------------------------------------------------
+
+
 const bitcoin = new blockchain();  // create a new blockchain
 
 // request as JSON to be parsed in the routes endpoints with bodyParser
@@ -53,4 +60,4 @@ app.get('/mine', function (req, res) {
  });
 });
 
-app.listen(3000, function () { console.log("Listening on port http://localhost:3000/..."); });  
+app.listen(port, function () { console.log(`Listening on port ${ port }...`); });  
