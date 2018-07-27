@@ -7,9 +7,7 @@ const blockchain = require("./blockchain"); // import blockchain contructor func
 const rp = require("request-promise");
 
 const uuid = require("uuid/v1"); //! Create this NODE identity, in order to get mining reward, with uuid library
-const nodeAddress = uuid()
-  .split("-")
-  .join(""); // stripping the dashes from this created UNIQUE string id
+const nodeAddress = uuid().split("-").join(""); // stripping the dashes from this created UNIQUE string id
 
 // ! ----------------------------------------------------------------------------------------
 // ! Now we need to create a NETWORK of DECENTRALIZED NODE (API) to hold the blockchain
@@ -29,12 +27,42 @@ app.get("/blockchain", function(req, res) {
 
 //TODO endpoint to create a new transaction
 app.post("/transaction", function(req, res) {
-  const blockIndex = bitcoin.createNewTransaction(
-    req.body.amount,
-    req.body.sender,
-    req.body.recipient
-  );
+  // once newTransaction is received, add it to PendingTransactions array.
+  const newTransaction = req.body;
+  const blockIndex = bitcoin.addTransactionToPendingTransactions(newTransaction);
   res.json({ note: `Transaction will be added in block ${blockIndex}.` });
+});
+
+//TODO endpoint to BROADCAST the new transaction  ------ IMG_2 !!!
+app.post("/transaction/broadcast", function (req, res) {
+
+  // 1. create the new transaction
+  const newTransaction = bitcoin.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
+  bitcoin.addTransactionToPendingTransactions(newTransaction);
+
+  // 2. broadcast new transaction to the other nodes in network
+
+  const requestPromises = [];
+
+  bitcoin.networkNodes.forEach(networkNodeUrl => {
+    // call transaction endpoint to all the other nodes in network
+    const requestOptions = {
+      uri: networkNodeUrl + '/transaction',
+      method: 'POST',
+      body: newTransaction,
+      json: true
+    };
+
+    requestPromises.push(rp(requestOptions));
+
+  });
+
+  // after all the broadcast is done, we send response
+  Promise.all(requestPromises)
+    .then(data => {
+      res.json({ notes: 'Transaction created and Broadcast successfull!' });
+    });
+
 });
 
 //TODO endpoint to mine/create a new Block
@@ -58,15 +86,73 @@ app.get("/mine", function(req, res) {
     nonce
   );
 
-  //! reward with some (12.5) bitcoin who mined the new block in the blockchain
-  bitcoin.createNewTransaction(12.5, "00S3ND3R_R3W4RD", nodeAddress);
-
   const newBlock = bitcoin.createNewBlock(nonce, previousBlockHash, blockHash);
 
-  res.json({
-    note: "New Block mined succesfully!",
-    block: newBlock
+  // TODO  ---- Broadcast new block to other blocks and clear pendingtransactions ---- IMG_3 !!!!
+  const requestPromises = [];
+  bitcoin.networkNodes.forEach(networkNodeUrl => {
+
+    const requestOptions = {
+      uri: networkNodeUrl + "/receive-new-block",
+      method: "POST",
+      body: {
+        newBlock: newBlock
+      },
+      json: true
+    };
+
+    requestPromises.push(rp(requestOptions));
+
   });
+
+  Promise.all(requestPromises)
+  //! reward with some (12.5) bitcoin who mined the new block in the blockchain
+    .then(data => {
+      const requestOptions = {
+        uri: bitcoin.currentNodeUrl + '/transaction/broadcast',
+        method: 'POST',
+        body: {
+          amount: 12.5,
+          sender: "00",
+          recipient: nodeAddress  
+        },
+        json: true
+      };
+      return rp(requestOptions);
+    })
+    .then(data => {
+      res.json({
+        note: "New Block mined and broadcasted succesfully!",
+        block: newBlock
+      });
+    });
+});
+
+// endopoint where new block is received
+app.post('/receive-new-block', function (req, res) {
+  const newBlock = req.body.newBlock;
+
+  //! when the other nodes/blocks receive this new block they must be sure that the new block is LEGITIMATE!
+  const lastBlock = bitcoin.getLastBlock();
+  const correctHash = lastBlock.hash === newBlock.previousBlockHash; 
+  const correctIndex = lastBlock['index'] + 1 === newBlock['index']; 
+
+  // if Legitimate add to chain, else reject it.
+  if (correctHash && correctIndex) {
+    bitcoin.chain.push(newBlock);
+    bitcoin.pendingTransaction = []; // clear pending transaction array
+    
+    res.json({ 
+      note: 'New Block received and Accepted! :)',
+      newBlock: newBlock
+   });
+  } else {
+    res.json({ 
+      note: 'New Block Rejected! :(',
+      newBlock: newBlock
+     });
+  }
+
 });
 
 // endpoint to register a node to its server and broadcast node to network (other nodes) ----- IMG_1

@@ -8,6 +8,7 @@
 // }
 
 const sha256 = require("sha256");
+const uuid = require("uuid/v1");
 
 // ! ----------------------------------------------------------------------------------------
 // ! Now we need to acess the third parameter in the NODE script, so that each node is aware of its url
@@ -50,28 +51,26 @@ Blockchain.prototype.getLastBlock = function() {
 };
 
 // method for creating new TRANSACTION
-Blockchain.prototype.createNewTransaction = function(
-  amount,
-  sender,
-  recipient
-) {
+Blockchain.prototype.createNewTransaction = function(amount, sender, recipient) {
   const newTransaction = {
     amount: amount,
     sender: sender,
-    recipient: recipient
+    recipient: recipient,
+    transactionId: uuid().split('-').join(''), // get rid of '-' that uuid creates 
   };
 
-  this.pendingTransaction.push(newTransaction); // push transaction to chain transaction array, waiting to be recorded as Block via mining, previous validation
-
-  return this.getLastBlock()["index"] + 1;
+  return newTransaction;
 };
 
+// add transaction to pending transaction array
+Blockchain.prototype.addTransactionToPendingTransactions = function (transactionObj) {
+  this.pendingTransaction.push(transactionObj);
+  return this.getLastBlock()['index'] + 1;
+}
+
+
 // method to get a block and hash it to a "fixed length random" string ie. 'DA434DAAF69'
-Blockchain.prototype.hashBlock = function(
-  previousBlockHash,
-  currentBlockData,
-  nonce
-) {
+Blockchain.prototype.hashBlock = function(previousBlockHash, currentBlockData,nonce) {
   // turn ALL the data (functions arguments) into ONE STRING
   const dataAsString =
     previousBlockHash + nonce.toString() + JSON.stringify(currentBlockData);
@@ -87,10 +86,7 @@ Blockchain.prototype.hashBlock = function(
 // => use currentData and previousHash
 // => continously changes nonce value (+1) until it finds the correct hash with '0000' at the beginning of the hash
 // => return to us the nonce value that create the corect hash
-Blockchain.prototype.proofOfWork = function(
-  previousBlockHash,
-  currentBlockData
-) {
+Blockchain.prototype.proofOfWork = function(previousBlockHash, currentBlockData) {
   let nonce = 0;
   let hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
 
