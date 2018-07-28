@@ -24,7 +24,7 @@ function Blockchain() {
   this.networkNodes = [];  // array of nodes network
 
 
-  // GENESIS BLOCK
+  //!  GENESIS BLOCK ------------------
   this.createNewBlock(100, '0', '0');  // GENESIS BLOCK without Proof of Work, with a ARBITRARY PARAMETERS.
 }
 
@@ -101,5 +101,48 @@ Blockchain.prototype.proofOfWork = function(previousBlockHash, currentBlockData)
   // NB => previousBlockHash, currentBlockData would return always the same hash, what makes the hash different is the nonce!
   return nonce;
 };
+
+//! CONSENSUS Method, verifying chain is valid - Returning if the chain is valid or not! ------------------------
+Blockchain.prototype.chainIsValid = function (blockchain) {
+
+  let validChain = true;
+  
+  // checking if all the blocks in the chain have right previousHash values
+  for(var i = 1; i < blockchain.length; i++) {
+    const currentBlock = blockchain[i];
+    const previousBlock = blockchain[i - 1];
+
+    // check 1. - re-hash if block to make sure the block is hashed as '0000'
+    const blockHash = this.hashBlock(previousBlock["hash"], { transactions: currentBlock["transactions"], index: currentBlock["index"] }, currentBlock["nonce"]);
+
+    if (blockHash.substring(0, 4) !== '0000') {
+      validChain = false;
+    }
+
+    // check 2. - previousHash === Block Hash
+    if (currentBlock['previousBlockHash'] !== previousBlock['hash']) {
+      // chain is NOT VALID!
+      validChain = false;
+    }
+    // console.log('previousBlockHash => ', previousBlock['hash']);
+    // console.log('currentBlockHash => ', currentBlock['hash']);
+
+  }
+
+  // check 3. - Genesis Block check
+  const genesisBlock = blockchain[0];
+  const correctNonce = genesisBlock['nonce'] === 100;
+  const correctPreviousBlockHash = genesisBlock['previousBlockHash'] === '0';
+  const correctHash = genesisBlock['hash'] === '0';
+  const correctTransactions = genesisBlock['transactions'].length === 0;
+  if (!correctNonce || !correctPreviousBlockHash || !correctHash || !correctTransactions) {
+    validChain = false;
+  }
+  
+  return validChain;
+
+};
+
+
 
 module.exports = Blockchain;
