@@ -273,6 +273,42 @@ app.get('/consensus', function (req, res) {
 
 });
 
+//! ----- ENDPOINTS to SEARCH and ACCESS information about a specific block/node and transactions
+// get block by blockHash
+app.get('/block/:blockHash', function (req, res) {
+  const blockHash = req.params.blockHash;
+  const correctBlock = bitcoin.getBlock(blockHash);
+  res.json({
+    block: correctBlock
+  });
+});
+
+// get transaction by transactionId
+app.get('/transaction/:transactionId', function (req, res) {
+  const transactionId = req.params.transactionId;
+  const trasactionData = bitcoin.getTransaction(transactionId);
+  res.json({
+    transaction: trasactionData.transaction,
+    block: trasactionData.block
+  });
+});
+
+// get address by address
+app.get('/address/:address', function (req, res) {
+  const address = req.params.address;
+  const addressData = bitcoin.getAddressData(address);
+  res.json({
+    addressData: addressData
+  });
+});
+//! -----------------------------------------------------------------------------
+
+//! -----  BLOCK EXPLORER endpoint to retrieve frontend structure ---------------
+app.get('/block-explorer', function (req, res) {
+  res.sendFile('./block-explorer/index.html', { root: __dirname });
+});  // look into this directory __dirname and find the file in the given
+//! -----------------------------------------------------------------------------
+
 app.listen(port, function() {
   console.log(`Listening on port ${port}...`);
 });
