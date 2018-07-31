@@ -6,7 +6,7 @@
 1. Blockchain Data structure.
 2. API to to communicate with Data Structure.
 3. Turned the API a DECENTRALIZED NETWORK.
-4. Syncronize Data among Blocks.
+4. Syncronize Data(Blocks) among Nodes.
 5. Create a CONSENSUS logic to make sure all the blocks are valid and legitimate.
 6. Build a Frontend Block Explorer, for data showing.
 

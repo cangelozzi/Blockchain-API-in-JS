@@ -273,7 +273,7 @@ app.get('/consensus', function (req, res) {
 
 });
 
-//! ----- ENDPOINTS to SEARCH and ACCESS information about a specific block/node and transactions
+//! ----- ENDPOINTS to SEARCH and ACCESS information about a specific block and transactions
 // get block by blockHash
 app.get('/block/:blockHash', function (req, res) {
   const blockHash = req.params.blockHash;
